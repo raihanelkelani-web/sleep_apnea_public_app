@@ -206,6 +206,43 @@ if st.button("🚀 Generate Report"):
     """, unsafe_allow_html=True)
 
     # ----------------------------------
+    # ✅ ADDED: PHYSIOLOGICAL PARAMETER BOXES
+    # ----------------------------------
+    st.markdown("## 📊 Physiological Parameters")
+
+    col1, col2, col3, col4, col5 = st.columns(5)
+
+    col1.markdown(f"""
+    <div style="background:#1abc9c;padding:10px;border-radius:10px;color:white;text-align:center;font-weight:bold;">
+    SpO₂<br>{spo2:.1f} %
+    </div>
+    """, unsafe_allow_html=True)
+
+    col2.markdown(f"""
+    <div style="background:#3498db;padding:10px;border-radius:10px;color:white;text-align:center;font-weight:bold;">
+    Heart Rate<br>{heart_rate:.1f} bpm
+    </div>
+    """, unsafe_allow_html=True)
+
+    col3.markdown(f"""
+    <div style="background:#9b59b6;padding:10px;border-radius:10px;color:white;text-align:center;font-weight:bold;">
+    Breathing Rate<br>{breathing_rate:.1f} /min
+    </div>
+    """, unsafe_allow_html=True)
+
+    col4.markdown(f"""
+    <div style="background:#e67e22;padding:10px;border-radius:10px;color:white;text-align:center;font-weight:bold;">
+    Snoring<br>{snoring:.2f}
+    </div>
+    """, unsafe_allow_html=True)
+
+    col5.markdown(f"""
+    <div style="background:#e74c3c;padding:10px;border-radius:10px;color:white;text-align:center;font-weight:bold;">
+    BMI<br>{bmi:.1f}
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ----------------------------------
     # DIAGNOSIS
     # ----------------------------------
     st.markdown("## 🧠 Diagnosis")
@@ -258,9 +295,6 @@ if st.button("🚀 Generate Report"):
 
     g1, g2, g3 = st.columns(3)
 
-    # ----------------------------------
-    # SpO2 GRAPH
-    # ----------------------------------
     with g1:
         fig, ax = plt.subplots(figsize=(4, 2.5))
         ax.plot(time, spo2_signal, color="green")
@@ -269,14 +303,6 @@ if st.button("🚀 Generate Report"):
         ax.set_ylabel("SpO₂ %")
         st.pyplot(fig)
 
-        st.caption(
-            f"Oxygen saturation fluctuated between {spo2_min:.1f}% and {spo2_max:.1f}%. "
-            "Dips may indicate apnea-related desaturation events."
-        )
-
-    # ----------------------------------
-    # HEART GRAPH
-    # ----------------------------------
     with g2:
         fig, ax = plt.subplots(figsize=(4, 2.5))
         ax.plot(time, heart_signal, color="red")
@@ -285,14 +311,6 @@ if st.button("🚀 Generate Report"):
         ax.set_ylabel("BPM")
         st.pyplot(fig)
 
-        st.caption(
-            f"Heart rate varied between {hr_min:.1f} and {hr_max:.1f} bpm. "
-            "Sudden increases may reflect stress responses during apnea episodes."
-        )
-
-    # ----------------------------------
-    # BREATHING GRAPH
-    # ----------------------------------
     with g3:
         fig, ax = plt.subplots(figsize=(4, 2.5))
         ax.plot(time, breathing_signal, color="blue")
@@ -300,11 +318,6 @@ if st.button("🚀 Generate Report"):
         ax.set_xlabel("Time (Minutes)")
         ax.set_ylabel("Breaths/min")
         st.pyplot(fig)
-
-        st.caption(
-            f"Breathing rate ranged between {br_min:.1f} and {br_max:.1f} breaths/min. "
-            "Irregular fluctuations may indicate respiratory instability."
-        )
 
     # ----------------------------------
     # CLINICAL FINDINGS
@@ -343,7 +356,7 @@ heart rate, and respiratory activity across the sleep cycle.
 """)
 
     # ----------------------------------
-    # REPORT (WITH GRAPH EXPLANATIONS ADDED)
+    # REPORT
     # ----------------------------------
     report = f"""
 SLEEP APNEA CLINICAL REPORT
@@ -363,9 +376,9 @@ Findings:
 {chr(10).join("- " + x for x in findings)}
 
 Graph Interpretation:
-- Oxygen saturation fluctuated between {spo2_min:.1f}% and {spo2_max:.1f}% indicating possible apnea events.
-- Heart rate varied between {hr_min:.1f} and {hr_max:.1f} bpm indicating physiological stress.
-- Breathing rate ranged between {br_min:.1f} and {br_max:.1f} breaths/min indicating respiratory instability.
+- Oxygen saturation fluctuated between {spo2_min:.1f}% and {spo2_max:.1f}%
+- Heart rate varied between {hr_min:.1f} bpm and {hr_max:.1f} bpm
+- Breathing rate ranged between {br_min:.1f} and {br_max:.1f} breaths/min
 
 Interpretation:
 The patient shows signs consistent with {severity.lower()} sleep apnea.

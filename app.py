@@ -7,7 +7,7 @@ import pandas as pd
 # ----------------------------------
 # PAGE CONFIG
 # ----------------------------------
-st.set_page_config(page_title="Sleep Apnea AI", layout="wide")
+st.set_page_config(page_title="myAPNEA", layout="wide")
 
 # ----------------------------------
 # STYLE
@@ -50,7 +50,7 @@ st.markdown("""
 # TITLE
 # ----------------------------------
 st.markdown(
-    '<div class="main-title">💤 Sleep Apnea Monitoring System</div>',
+    '<div class="main-title">💤 myAPNEA - Sleep Apnea Monitoring System</div>',
     unsafe_allow_html=True
 )
 
@@ -59,12 +59,12 @@ now = datetime.now()
 # ----------------------------------
 # SIDEBAR
 # ----------------------------------
-st.sidebar.markdown("## ℹ About System")
+st.sidebar.markdown("## ℹ About myAPNEA")
 
 st.sidebar.markdown("""
 <div class="about-box">
-AI-based sleep apnea detection using vital signs.<br><br>
-Analyzes SpO₂, heart rate, breathing, snoring, and BMI.<br><br>
+<b>myAPNEA</b> is an AI-based sleep apnea monitoring system using vital signs.<br><br>
+It analyzes SpO₂, heart rate, breathing rate, snoring level, and BMI.<br><br>
 🔗 Supports Arduino-based monitoring device for continuous data collection.
 </div>
 """, unsafe_allow_html=True)
@@ -293,6 +293,24 @@ if st.button("🚀 Generate Report"):
     hr_min, hr_max = np.min(heart_signal), np.max(heart_signal)
     br_min, br_max = np.min(breathing_signal), np.max(breathing_signal)
 
+    spo2_explanation = f"""
+    This graph shows oxygen saturation during the sleep period. 
+    The SpO₂ values ranged between {spo2_min:.1f}% and {spo2_max:.1f}%. 
+    A stable SpO₂ level usually indicates normal breathing, while repeated drops below 92% may suggest apnea-related oxygen desaturation.
+    """
+
+    heart_explanation = f"""
+    This graph shows heart rate changes during sleep. 
+    The heart rate ranged between {hr_min:.1f} bpm and {hr_max:.1f} bpm. 
+    Large or repeated increases may indicate physiological stress caused by interrupted breathing.
+    """
+
+    breathing_explanation = f"""
+    This graph shows breathing rate throughout the sleep period. 
+    The breathing rate ranged between {br_min:.1f} and {br_max:.1f} breaths/min. 
+    Irregular or elevated breathing patterns may suggest respiratory disturbance during sleep.
+    """
+
     g1, g2, g3 = st.columns(3)
 
     with g1:
@@ -302,6 +320,7 @@ if st.button("🚀 Generate Report"):
         ax.set_xlabel("Time (Minutes)")
         ax.set_ylabel("SpO₂ %")
         st.pyplot(fig)
+        st.info(spo2_explanation)
 
     with g2:
         fig, ax = plt.subplots(figsize=(4, 2.5))
@@ -310,6 +329,7 @@ if st.button("🚀 Generate Report"):
         ax.set_xlabel("Time (Minutes)")
         ax.set_ylabel("BPM")
         st.pyplot(fig)
+        st.info(heart_explanation)
 
     with g3:
         fig, ax = plt.subplots(figsize=(4, 2.5))
@@ -318,6 +338,7 @@ if st.button("🚀 Generate Report"):
         ax.set_xlabel("Time (Minutes)")
         ax.set_ylabel("Breaths/min")
         st.pyplot(fig)
+        st.info(breathing_explanation)
 
     # ----------------------------------
     # CLINICAL FINDINGS
@@ -356,6 +377,46 @@ heart rate, and respiratory activity across the sleep cycle.
 """)
 
     # ----------------------------------
+    # RECOMMENDATIONS
+    # ----------------------------------
+    st.markdown("## 💡 Recommendations")
+
+    if severity == "Normal":
+        recommendations = [
+            "No immediate medical treatment is required based on the current readings.",
+            "Maintain a healthy sleep routine.",
+            "Continue monitoring if symptoms such as snoring, morning headache, or daytime sleepiness appear."
+        ]
+
+    elif severity == "Mild":
+        recommendations = [
+            "Lifestyle modification is recommended.",
+            "Maintain a healthy body weight.",
+            "Sleep on the side instead of the back.",
+            "Avoid sedatives before sleep.",
+            "Consult a healthcare professional if symptoms persist."
+        ]
+
+    elif severity == "Moderate":
+        recommendations = [
+            "Medical evaluation by a sleep specialist is recommended.",
+            "A full sleep study may be required.",
+            "Weight management and sleep position correction are advised.",
+            "The patient may require further clinical assessment and treatment planning."
+        ]
+
+    elif severity == "Severe":
+        recommendations = [
+            "Urgent evaluation by a sleep specialist is strongly recommended.",
+            "The patient may need to sleep with CPAP therapy to keep the airway open.",
+            "Continuous monitoring of oxygen saturation and breathing is advised.",
+            "Medical follow-up is required to reduce cardiovascular and respiratory risks."
+        ]
+
+    for rec in recommendations:
+        st.write("•", rec)
+
+    # ----------------------------------
     # REPORT
     # ----------------------------------
     report = f"""
@@ -384,9 +445,7 @@ Interpretation:
 The patient shows signs consistent with {severity.lower()} sleep apnea.
 
 Recommendations:
-- Maintain healthy body weight
-- Sleep in lateral position
-- Seek specialist evaluation if symptoms persist
+{chr(10).join("- " + x for x in recommendations)}
 """
 
     st.session_state.report_data = report

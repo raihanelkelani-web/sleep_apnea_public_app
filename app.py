@@ -285,9 +285,25 @@ if st.button("🚀 Generate Report"):
     points = hours * 60
     time = np.arange(points)
 
-    spo2_signal = np.clip(np.random.normal(spo2, 1.5, points), 85, 100)
-    heart_signal = np.random.normal(heart_rate, 3, points)
-    breathing_signal = np.random.normal(breathing_rate, 1.2, points)
+    if severity == "Normal":
+        spo2_signal = np.clip(np.random.normal(spo2, 0.3, points), spo2 - 0.8, spo2 + 0.8)
+        heart_signal = np.clip(np.random.normal(heart_rate, 1.2, points), heart_rate - 3, heart_rate + 3)
+        breathing_signal = np.clip(np.random.normal(breathing_rate, 0.4, points), breathing_rate - 1, breathing_rate + 1)
+
+    elif severity == "Mild":
+        spo2_signal = np.clip(np.random.normal(spo2, 0.4, points), spo2 - 1.2, spo2 + 1.2)
+        heart_signal = np.clip(np.random.normal(heart_rate, 1.5, points), heart_rate - 4, heart_rate + 4)
+        breathing_signal = np.clip(np.random.normal(breathing_rate, 0.5, points), breathing_rate - 1.3, breathing_rate + 1.3)
+
+    elif severity == "Moderate":
+        spo2_signal = np.clip(np.random.normal(spo2, 0.5, points), spo2 - 1.5, spo2 + 1.5)
+        heart_signal = np.clip(np.random.normal(heart_rate, 2.0, points), heart_rate - 5, heart_rate + 5)
+        breathing_signal = np.clip(np.random.normal(breathing_rate, 0.7, points), breathing_rate - 1.8, breathing_rate + 1.8)
+
+    else:  # Severe
+        spo2_signal = np.clip(np.random.normal(spo2, 0.7, points), spo2 - 2.0, spo2 + 2.0)
+        heart_signal = np.clip(np.random.normal(heart_rate, 2.5, points), heart_rate - 6, heart_rate + 6)
+        breathing_signal = np.clip(np.random.normal(breathing_rate, 0.8, points), breathing_rate - 2.0, breathing_rate + 2.0)
 
     spo2_min, spo2_max = np.min(spo2_signal), np.max(spo2_signal)
     hr_min, hr_max = np.min(heart_signal), np.max(heart_signal)
@@ -460,3 +476,4 @@ if "report_data" in st.session_state:
         st.session_state.report_data,
         file_name="sleep_report.txt"
     )
+    

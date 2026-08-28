@@ -43,6 +43,7 @@ st.markdown("""
     font-weight: bold;
     z-index: 999;
 }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -171,6 +172,32 @@ def risk_engine(spo2, hr, br, snore, bmi):
 # GENERATE REPORT
 # ----------------------------------
 if st.button("🚀 Generate Report"):
+    st.session_state.report_generated = True
+    st.session_state.generated_inputs = {
+        "spo2": float(spo2),
+        "heart_rate": float(heart_rate),
+        "breathing_rate": float(breathing_rate),
+        "snoring": float(snoring),
+        "bmi": float(bmi),
+        "name": name,
+        "age": age,
+        "patient_id": patient_id,
+        "csv_mode": csv_mode
+    }
+
+if st.session_state.get("report_generated", False):
+
+    generated_inputs = st.session_state.generated_inputs
+
+    spo2 = generated_inputs["spo2"]
+    heart_rate = generated_inputs["heart_rate"]
+    breathing_rate = generated_inputs["breathing_rate"]
+    snoring = generated_inputs["snoring"]
+    bmi = generated_inputs["bmi"]
+    name = generated_inputs["name"]
+    age = generated_inputs["age"]
+    patient_id = generated_inputs["patient_id"]
+    csv_mode = generated_inputs["csv_mode"]
 
     risk_score = risk_engine(spo2, heart_rate, breathing_rate, snoring, bmi)
 
@@ -285,25 +312,44 @@ if st.button("🚀 Generate Report"):
     points = hours * 60
     time = np.arange(points)
 
-    if severity == "Normal":
-        spo2_signal = np.clip(np.random.normal(spo2, 0.3, points), spo2 - 0.8, spo2 + 0.8)
-        heart_signal = np.clip(np.random.normal(heart_rate, 1.2, points), heart_rate - 3, heart_rate + 3)
-        breathing_signal = np.clip(np.random.normal(breathing_rate, 0.4, points), breathing_rate - 1, breathing_rate + 1)
+    # Generate sleep signals only when a new report is created.
+    signal_key = (
+        round(float(spo2), 3),
+        round(float(heart_rate), 3),
+        round(float(breathing_rate), 3),
+        severity
+    )
 
-    elif severity == "Mild":
-        spo2_signal = np.clip(np.random.normal(spo2, 0.4, points), spo2 - 1.2, spo2 + 1.2)
-        heart_signal = np.clip(np.random.normal(heart_rate, 1.5, points), heart_rate - 4, heart_rate + 4)
-        breathing_signal = np.clip(np.random.normal(breathing_rate, 0.5, points), breathing_rate - 1.3, breathing_rate + 1.3)
+    if st.session_state.get("signal_key") != signal_key:
 
-    elif severity == "Moderate":
-        spo2_signal = np.clip(np.random.normal(spo2, 0.5, points), spo2 - 1.5, spo2 + 1.5)
-        heart_signal = np.clip(np.random.normal(heart_rate, 2.0, points), heart_rate - 5, heart_rate + 5)
-        breathing_signal = np.clip(np.random.normal(breathing_rate, 0.7, points), breathing_rate - 1.8, breathing_rate + 1.8)
+        if severity == "Normal":
+            spo2_signal = np.clip(np.random.normal(spo2, 0.3, points), spo2 - 0.8, spo2 + 0.8)
+            heart_signal = np.clip(np.random.normal(heart_rate, 1.2, points), heart_rate - 3, heart_rate + 3)
+            breathing_signal = np.clip(np.random.normal(breathing_rate, 0.4, points), breathing_rate - 1, breathing_rate + 1)
 
-    else:  # Severe
-        spo2_signal = np.clip(np.random.normal(spo2, 0.7, points), spo2 - 2.0, spo2 + 2.0)
-        heart_signal = np.clip(np.random.normal(heart_rate, 2.5, points), heart_rate - 6, heart_rate + 6)
-        breathing_signal = np.clip(np.random.normal(breathing_rate, 0.8, points), breathing_rate - 2.0, breathing_rate + 2.0)
+        elif severity == "Mild":
+            spo2_signal = np.clip(np.random.normal(spo2, 0.4, points), spo2 - 1.2, spo2 + 1.2)
+            heart_signal = np.clip(np.random.normal(heart_rate, 1.5, points), heart_rate - 4, heart_rate + 4)
+            breathing_signal = np.clip(np.random.normal(breathing_rate, 0.5, points), breathing_rate - 1.3, breathing_rate + 1.3)
+
+        elif severity == "Moderate":
+            spo2_signal = np.clip(np.random.normal(spo2, 0.5, points), spo2 - 1.5, spo2 + 1.5)
+            heart_signal = np.clip(np.random.normal(heart_rate, 2.0, points), heart_rate - 5, heart_rate + 5)
+            breathing_signal = np.clip(np.random.normal(breathing_rate, 0.7, points), breathing_rate - 1.8, breathing_rate + 1.8)
+
+        else:  # Severe
+            spo2_signal = np.clip(np.random.normal(spo2, 0.7, points), spo2 - 2.0, spo2 + 2.0)
+            heart_signal = np.clip(np.random.normal(heart_rate, 2.5, points), heart_rate - 6, heart_rate + 6)
+            breathing_signal = np.clip(np.random.normal(breathing_rate, 0.8, points), breathing_rate - 2.0, breathing_rate + 2.0)
+
+        st.session_state.spo2_signal = spo2_signal
+        st.session_state.heart_signal = heart_signal
+        st.session_state.breathing_signal = breathing_signal
+        st.session_state.signal_key = signal_key
+
+    spo2_signal = st.session_state.spo2_signal
+    heart_signal = st.session_state.heart_signal
+    breathing_signal = st.session_state.breathing_signal
 
     spo2_min, spo2_max = np.min(spo2_signal), np.max(spo2_signal)
     hr_min, hr_max = np.min(heart_signal), np.max(heart_signal)
@@ -355,6 +401,140 @@ if st.button("🚀 Generate Report"):
         ax.set_ylabel("Breaths/min")
         st.pyplot(fig)
         st.info(breathing_explanation)
+
+
+    # ----------------------------------
+    # ADVANCED SLEEP ANALYSIS (ADDED ONLY)
+    # ----------------------------------
+    st.markdown("## 🔬 Advanced Sleep Analysis")
+    st.markdown("### 🫁 Sleep Oxygen Status")
+
+    # Calculate how much of the monitoring period falls into each SpO₂ range
+    normal_oxygen = np.sum(spo2_signal >= 95)
+    mild_reduction = np.sum((spo2_signal >= 92) & (spo2_signal < 95))
+    low_oxygen = np.sum(spo2_signal < 92)
+
+    oxygen_counts = [normal_oxygen, mild_reduction, low_oxygen]
+    oxygen_labels = [
+        "Normal Oxygenation (≥95%)",
+        "Mild Reduction (92–94%)",
+        "Low Oxygenation (<92%)"
+    ]
+    oxygen_colors = ["#2ecc71", "#f1c40f", "#e74c3c"]
+
+    # Avoid displaying empty categories in the pie chart
+    filtered_counts = []
+    filtered_labels = []
+    filtered_colors = []
+
+    for count, label, pie_color in zip(oxygen_counts, oxygen_labels, oxygen_colors):
+        if count > 0:
+            filtered_counts.append(count)
+            filtered_labels.append(label)
+            filtered_colors.append(pie_color)
+
+    pie_col1, pie_col2 = st.columns([1.2, 1])
+
+    with pie_col1:
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.pie(
+            filtered_counts,
+            labels=filtered_labels,
+            colors=filtered_colors,
+            autopct="%1.1f%%",
+            startangle=90,
+            wedgeprops={"edgecolor": "white", "linewidth": 1}
+        )
+        ax.set_title("Distribution of SpO₂ Readings During Sleep")
+        ax.axis("equal")
+        st.pyplot(fig)
+
+    with pie_col2:
+        total_readings = len(spo2_signal)
+
+        normal_percent = (normal_oxygen / total_readings) * 100
+        mild_percent = (mild_reduction / total_readings) * 100
+        low_percent = (low_oxygen / total_readings) * 100
+
+        st.info(f"""
+**Oxygen Distribution Summary**
+
+🟢 **Normal Oxygenation (≥95%)**: {normal_percent:.1f}%
+
+🟡 **Mild Reduction (92–94%)**: {mild_percent:.1f}%
+
+🔴 **Low Oxygenation (<92%)**: {low_percent:.1f}%
+
+This chart shows the percentage of the simulated 8–9 hour monitoring period spent within each oxygen saturation range. It complements the SpO₂ line graph by summarizing the overall distribution of oxygen readings.
+""")
+
+
+    st.markdown("### 📊 Interactive Signal Viewer")
+
+    selected_signals = st.multiselect(
+        "Select signals to display",
+        ["SpO₂", "Heart Rate", "Breathing Rate"],
+        default=["SpO₂", "Heart Rate", "Breathing Rate"]
+    )
+
+    start_minute, end_minute = st.slider(
+        "Select monitoring time range (minutes)",
+        min_value=0,
+        max_value=points - 1,
+        value=(0, points - 1),
+        step=10
+    )
+
+    selected_time = time[start_minute:end_minute + 1]
+
+    if selected_signals:
+        fig, ax = plt.subplots(figsize=(10, 4))
+
+        if "SpO₂" in selected_signals:
+            ax.plot(selected_time, spo2_signal[start_minute:end_minute + 1], label="SpO₂")
+
+        if "Heart Rate" in selected_signals:
+            ax.plot(selected_time, heart_signal[start_minute:end_minute + 1], label="Heart Rate")
+
+        if "Breathing Rate" in selected_signals:
+            ax.plot(selected_time, breathing_signal[start_minute:end_minute + 1], label="Breathing Rate")
+
+        ax.set_title("Interactive Multi-Signal Viewer")
+        ax.set_xlabel("Time (Minutes)")
+        ax.set_ylabel("Signal Value")
+        ax.legend()
+        ax.grid(alpha=0.2)
+        st.pyplot(fig)
+    else:
+        st.warning("Select at least one signal to display.")
+
+    st.markdown("### ⏱ Quick Time Windows")
+
+    preset = st.radio(
+        "Choose a monitoring period",
+        ["Full Night", "First 3 Hours", "Middle 3 Hours", "Last 3 Hours"],
+        horizontal=True
+    )
+
+    if preset == "Full Night":
+        preset_start, preset_end = 0, points
+    elif preset == "First 3 Hours":
+        preset_start, preset_end = 0, min(180, points)
+    elif preset == "Middle 3 Hours":
+        middle = points // 2
+        preset_start = max(0, middle - 90)
+        preset_end = min(points, middle + 90)
+    else:
+        preset_start, preset_end = max(0, points - 180), points
+
+    fig, ax = plt.subplots(figsize=(10, 3.5))
+    ax.plot(time[preset_start:preset_end], spo2_signal[preset_start:preset_end], label="SpO₂")
+    ax.set_title(f"SpO₂ - {preset}")
+    ax.set_xlabel("Time (Minutes)")
+    ax.set_ylabel("SpO₂ %")
+    ax.legend()
+    ax.grid(alpha=0.2)
+    st.pyplot(fig)
 
     # ----------------------------------
     # CLINICAL FINDINGS
@@ -433,6 +613,61 @@ heart rate, and respiratory activity across the sleep cycle.
         st.write("•", rec)
 
     # ----------------------------------
+    # SESSION PATIENT HISTORY (ADDED ONLY)
+    # ----------------------------------
+    st.markdown("### 🗂 Session Patient History")
+
+    if "patient_history" not in st.session_state:
+        st.session_state.patient_history = []
+
+    current_record = {
+        "Patient": name if name else "Unnamed",
+        "ID": patient_id if patient_id else "-",
+        "Age": age,
+        "SpO₂": round(float(spo2), 1),
+        "Heart Rate": round(float(heart_rate), 1),
+        "Breathing Rate": round(float(breathing_rate), 1),
+        "API": int(api_percent),
+        "Classification": severity
+    }
+
+    if st.button("➕ Add Current Result to Session History"):
+        st.session_state.patient_history.append(current_record)
+        st.success("Current result added to session history.")
+
+    if st.session_state.patient_history:
+        history_df = pd.DataFrame(st.session_state.patient_history)
+        st.dataframe(history_df, use_container_width=True)
+    else:
+        st.caption("No patient results have been added to the current session yet.")
+
+
+    # ----------------------------------
+    # ADDITIONAL INFORMATION (ADDED ONLY)
+    # ----------------------------------
+    with st.expander("ℹ What does the API represent?"):
+        st.write(
+            "The Apnea Performance Index (API) is the app's internal risk score derived from "
+            "SpO₂, heart rate, breathing rate, snoring level, and BMI. It is not the same as "
+            "the clinical Apnea-Hypopnea Index (AHI)."
+        )
+
+    with st.expander("ℹ Why combine multiple parameters?"):
+        st.write(
+            "A single abnormal physiological value does not necessarily indicate sleep apnea. "
+            "The application therefore considers multiple readings together to provide a broader "
+            "assessment of the monitored sleep pattern."
+        )
+
+    with st.expander("Can one abnormal reading mean that I have sleep apnea?"):
+        st.write(
+            "No. A single abnormal SpO₂, heart-rate, breathing-rate, or snoring reading is not "
+            "enough by itself to establish sleep apnea. The app evaluates the overall pattern and "
+            "multiple monitored parameters together."
+        )
+
+
+    # ----------------------------------
     # REPORT
     # ----------------------------------
     report = f"""
@@ -476,4 +711,3 @@ if "report_data" in st.session_state:
         st.session_state.report_data,
         file_name="sleep_report.txt"
     )
-    
